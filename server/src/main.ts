@@ -5,17 +5,18 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const logger = new Logger('Main (main.ts)');
-  const app = await NestFactory.create(AppModule, {
-    cors: {
-      origin: [
-        'http://localhost:8080',
-        /^http:\/\/192\.168\.1\.([1-9]|[1-9]\d):8080$/,
-      ],
-    },
-  });
-
+  const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
   const configService = app.get(ConfigService);
+  const clientPort = configService.get('PORT_CLIENT');
   const port = parseInt(configService.get('PORT'));
+
+  app.enableCors({
+    origin: [
+      `http://localhost:${clientPort}`,
+      /^http:\/\/192\.168\.1\.([1-9]|[1-9]\d):${clientPort}$/,
+    ],
+  });
   await app.listen(port);
 
   logger.log(`Server running on port ${port}`);

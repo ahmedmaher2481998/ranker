@@ -1,6 +1,7 @@
 {
-  "name": "ranker-course",
-  "version": "0.0.1",
+  "name": "ranker-app",
+  "version": "1.0.0",
+  "private": true,
   "description": "Make decisions with friends via ranked voting!",
   "main": "index.js",
   "workspaces": [
@@ -8,30 +9,32 @@
     "server"
   ],
   "scripts": {
-    "docker:compose": "docker-compose up -d",
+    "docker:compose": "sudo docker-compose up -d",
     "client:dev": "npm run dev --workspace=client",
     "server:dev": "wait-on tcp:6379 && npm run start:dev --workspace=server",
     "start": "concurrently 'npm:docker:compose' 'npm:server:dev' 'npm:client:dev'",
     "storybook": "npm run storybook --workspace=client",
     "stop": "docker-compose down",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo 'Error: no test specified' && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JacobSNGoodwin/ranker.git"
+    "url": "git+https://github.com/ahmedmaher2481998/ranker.git"
   },
   "keywords": [
     "ts",
     "react",
     "nestjs",
-    "socketjs"
+    "socketIO",
+    "redis",
+    "docker"
   ],
-  "author": "Jacob Goodwin",
-  "license": "ISC",
+  "author": "Ahmed maher",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/JacobSNGoodwin/ranker/issues"
+    "url": "https://github.com/ahmedmaher2481998/ranker/issues"
   },
-  "homepage": "https://github.com/JacobSNGoodwin/ranker#readme",
+  "homepage": "https://github.com/ahmedmaher2481998/ranker#readme",
   "devDependencies": {
     "@types/webpack": "^5.28.0",
     "concurrently": "^7.0.0",
