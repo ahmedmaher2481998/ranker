@@ -10,3 +10,15 @@ export class rejoinPollFields {
   userId: string;
   pollId: string;
 }
+// Polls Repository Types
+export type CreatePollData = {
+  pollId: string;
+  userId: string;
+  votesPerVoter: number;
+  topic: string;
+};
+export type AddParticipantData = {
+  name: string;
+  userId: string;
+  pollId: string;
+};
