@@ -1,3 +1,4 @@
+import { Request } from '@nestjs/common';
 import { CreatePollDto, JoinPollDto } from './dtos';
 
 export class createPollFields extends CreatePollDto { }
@@ -24,3 +25,6 @@ export type AddParticipantData = {
   userID: string;
   pollID: string;
 };
+export type RequestWithAuth = {
+  userID: string, pollID: string, name: string
+} & Request

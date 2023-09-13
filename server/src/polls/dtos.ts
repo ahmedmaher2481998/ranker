@@ -15,8 +15,8 @@ export class CreatePollDto {
 
   @IsNotEmpty()
   @IsInt()
-  @Min(1)
   @Max(5)
+  @Min(1)
   votesPerVoter: number;
 
   @IsNotEmpty()
@@ -26,7 +26,7 @@ export class CreatePollDto {
 }
 export class JoinPollDto {
   @IsNotEmpty()
-  @Length(6, 6)
+  @Length(6)
   @IsString()
   pollID: string;
 

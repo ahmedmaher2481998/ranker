@@ -7,5 +7,9 @@ export interface Poll {
   votesPerVoter: number;
   adminId: string;
   participants: Participants;
-  //   TODO  nominations , rankings , results , hasStarted
+  //   TODO 
+  //  nominations ,
+  //  rankings ,
+  //  results ,
+  //  hasStarted
 }

@@ -1,6 +1,6 @@
-import { Injectable, Logger, Inject, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger, Inject, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { IoRedisKey } from 'src/redis/redis.module';
+import { IoRedisKey } from 'src/config/redis.module';
 import { Redis } from 'ioredis';
 import { AddParticipantData, CreatePollData } from './types';
 import { Poll } from 'shared';
@@ -50,22 +50,25 @@ export class PollsRepository {
     try {
       this.logger.log(`getting poll with id  ${pollID}`)
       const poll = await this.redis.get(this.getKey(pollID))
+      if (!poll) throw new ForbiddenException("poll doesn't exist ...")
       this.logger.verbose(poll)
       return JSON.parse(poll) as Poll
     } catch (error) {
-      this.logger.error(`Failed to get Pool with id ${pollID}`)
-      throw new InternalServerErrorException("Redis Error ")
+      this.logger.error(`Failed to get poll with id ${pollID}`)
+      throw new InternalServerErrorException(error.name)
 
     }
   }
+
   async addParticipant({ name, pollID, userID }: AddParticipantData): Promise<Poll> {
     try {
       const poll = await this.getPoll(pollID) as Poll
+
       poll.participants[`${userID}`] = name
       await this.redis.set(this.getKey(pollID), JSON.stringify(poll))
       return poll
     } catch (error) {
-
+      throw error
     }
 
 
