@@ -1,8 +1,10 @@
 import { Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from './redis.module';
+
 export const redisModule = RedisModule.registerAsync({
   imports: [ConfigModule],
+  inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
     const logger = new Logger('redis');
     return {
@@ -11,7 +13,7 @@ export const redisModule = RedisModule.registerAsync({
         port: configService.get('REDIS_PORT'),
       },
       onClientReady(redis) {
-        logger.log('Redis start...');
+        logger.log('Redis is ready...');
         redis.on('error', (err) => {
           logger.error('Redis client Error:', err);
         });
@@ -23,5 +25,4 @@ export const redisModule = RedisModule.registerAsync({
       },
     };
   },
-  inject: [ConfigService],
 });

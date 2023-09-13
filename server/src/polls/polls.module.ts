@@ -9,4 +9,4 @@ import { redisModule } from '../redis/modules.config';
   controllers: [PollsController],
   providers: [PollsService, PollsRepository],
 })
-export class PollsModule {}
+export class PollsModule { }

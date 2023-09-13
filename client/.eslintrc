@@ -26,7 +26,7 @@
   },
   "rules": {
     "@typescript-eslint/no-unused-vars": [
-      "warn", 
+      "warn",
       { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
     ],
     "react/prop-types": "off"

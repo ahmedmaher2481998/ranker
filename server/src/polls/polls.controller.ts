@@ -4,7 +4,7 @@ import { PollsService } from './polls.service';
 
 @Controller('polls')
 export class PollsController {
-  constructor(private readonly pollService: PollsService) {}
+  constructor(private readonly pollService: PollsService) { }
 
   @Post('/')
   async create(@Body() createPoll: CreatePollDto) {
@@ -19,8 +19,8 @@ export class PollsController {
   async rejoin() {
     const rejoin = {
       name: 'from jwt',
-      userId: 'from jwt',
-      pollId: 'from jwt',
+      userID: 'from jwt',
+      pollID: 'from jwt',
     };
     return this.pollService.rejoin(rejoin);
   }

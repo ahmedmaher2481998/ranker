@@ -1,11 +1,12 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger, Inject, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IoRedisKey } from 'src/redis/redis.module';
 import { Redis } from 'ioredis';
-import { CreatePollData } from './types';
+import { AddParticipantData, CreatePollData } from './types';
 import { Poll } from 'shared';
 @Injectable()
 export class PollsRepository {
+  // time to live 
   private til: string;
   private logger = new Logger(PollsRepository.name);
   public getKey = (pollId: string) => `polls:${pollId}`;
@@ -17,32 +18,56 @@ export class PollsRepository {
     this.til = configService.get('POLL_DURATION');
   }
 
-  createPoll({
-    pollId,
-    topic,
-    userId,
-    votesPerVoter,
+  async createPoll({
+    pollID, topic, userID, votesPerVoter
   }: CreatePollData): Promise<Poll> {
     const poll = {
-      adminId: userId,
+      adminId: userID,
       topic,
-      id: pollId,
+      id: pollID,
       votesPerVoter,
       participants: {},
     };
-    const key = this.getKey(pollId);
+    const key = this.getKey(pollID);
 
     this.logger.log(
-      `Creating new poll: ${JSON.stringify(poll, null, 2)} with TTL ${
-        this.til
+      `Creating new poll: ${poll.topic} with TTL ${this.til
       }`,
     );
+    try {
+      // thanks ChatGPT !!
+      await this.redis.set(key, JSON.stringify(poll), "EX", this.til)
+      return poll
 
-    this.redis
-      .multi([
-        ['send_command', 'JSON.SET', key, '.', JSON.stringify(poll)],
-        [''],
-      ])
-      .exec();
+    } catch (error) {
+      console.error(error)
+      this.logger.error(`Failed to add poll ${JSON.stringify(poll)}\n${error}`)
+    }
+    throw new InternalServerErrorException()
+  }
+
+  async getPoll(pollID: string) {
+    try {
+      this.logger.log(`getting poll with id  ${pollID}`)
+      const poll = await this.redis.get(this.getKey(pollID))
+      this.logger.verbose(poll)
+      return JSON.parse(poll) as Poll
+    } catch (error) {
+      this.logger.error(`Failed to get Pool with id ${pollID}`)
+      throw new InternalServerErrorException("Redis Error ")
+
+    }
+  }
+  async addParticipant({ name, pollID, userID }: AddParticipantData): Promise<Poll> {
+    try {
+      const poll = await this.getPoll(pollID) as Poll
+      poll.participants[`${userID}`] = name
+      await this.redis.set(this.getKey(pollID), JSON.stringify(poll))
+      return poll
+    } catch (error) {
+
+    }
+
+
   }
 }
