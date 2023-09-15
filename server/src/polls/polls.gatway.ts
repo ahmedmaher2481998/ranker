@@ -24,8 +24,6 @@ export class PollsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
 
         this.io.emit('hello', `from ${client.id}`);
 
-
-
     }
 
 

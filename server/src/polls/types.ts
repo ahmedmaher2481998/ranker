@@ -1,5 +1,6 @@
 import { Request } from '@nestjs/common';
 import { CreatePollDto, JoinPollDto } from './dtos';
+import { Socket } from 'socket.io';
 
 export class createPollFields extends CreatePollDto { }
 
@@ -25,6 +26,12 @@ export type AddParticipantData = {
   userID: string;
   pollID: string;
 };
-export type RequestWithAuth = {
+
+
+
+// Auth types 
+type AuthPayload = {
   userID: string, pollID: string, name: string
-} & Request
+}
+export type RequestWithAuth = AuthPayload & Request
+export type SocketWithAuth = AuthPayload & Socket

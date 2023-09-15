@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { CreatePollDto, JoinPollDto } from './dtos';
 import { PollsService } from './polls.service';
 import { ControllerAuthGuard } from './auth-controller.guard';
+import { RequestWithAuth } from './types';
 
 @Controller('polls')
 export class PollsController {
@@ -15,17 +16,14 @@ export class PollsController {
 
   @Post('/join')
   async joinPoll(@Body() joinPoll: JoinPollDto) {
+    console.log(`joining poll with id  ${joinPoll.pollID}`);
     return this.pollService.join(joinPoll);
   }
 
   @UseGuards(ControllerAuthGuard)
   @Post('rejoin')
-  async rejoin() {
-    const rejoin = {
-      name: 'from jwt',
-      userID: 'from jwt',
-      pollID: 'from jwt',
-    };
-    return this.pollService.rejoin(rejoin);
+  async rejoin(req: RequestWithAuth) {
+    const { name, userID, pollID } = req
+    return this.pollService.rejoin({ name, userID, pollID });
   }
 }

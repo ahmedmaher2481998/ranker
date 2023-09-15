@@ -1,7 +1,9 @@
-import { INestApplication, Logger, RequestTimeoutException } from "@nestjs/common";
+import { ForbiddenException, INestApplication, Logger, RequestTimeoutException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { IoAdapter } from "@nestjs/platform-socket.io";
-import { ServerOptions } from "socket.io";
+import { Server, ServerOptions } from "socket.io";
+import { SocketWithAuth } from "src/polls/types";
 
 export class SocketIOAdapter extends IoAdapter {
 
@@ -27,9 +29,28 @@ export class SocketIOAdapter extends IoAdapter {
             ...options
         }
         this.logger.log(`setting up cors with socketIO on ${clientPort}`)
-        return super.createIOServer(port, OptionsWithCors);
+        const ioServer: Server = super.createIOServer(port, OptionsWithCors);
+        const jwtService = this.app.get(JwtService);
+        ioServer.of('polls').use(createTokenMiddleWare(jwtService, this.logger))
+        return ioServer;
+    }
 
+}
 
+const createTokenMiddleWare = (jwt: JwtService, logger: Logger) => async (socket: SocketWithAuth, next) => {
+    const token = socket.handshake.auth.token || socket.handshake.headers['token']
+    logger.debug(`verifying  token ${token}`)
+
+    try {
+        const authPayload = await jwt.verify(token)
+        socket.userID = authPayload.sub
+        socket.pollID = authPayload.pollID
+        socket.name = authPayload.name
+        logger.debug(`verified name: ${authPayload.name} pollID: ${authPayload.pollID} userID: ${authPayload.sub}`)
+
+        return next()
+    } catch (error) {
+        return next(new ForbiddenException("Invalid access token "))
     }
 
 }
