@@ -23,7 +23,6 @@ async function bootstrap() {
       /^http:\/\/192\.168\.1\.([1-9]|[1-9]\d):${clientPort}$/,
     ]
   });
-  // app.useGlobalPipes(new ValidationPipe());
   app.useWebSocketAdapter(new SocketIOAdapter(app, configService))
   await app.listen(port);
 
