@@ -1,4 +1,4 @@
-import { BadRequestException, Logger, UseFilters } from "@nestjs/common";
+import { BadRequestException, Logger, UseFilters, UseGuards } from "@nestjs/common";
 import {
     WebSocketGateway,
     OnGatewayInit,
@@ -8,12 +8,14 @@ import {
     SubscribeMessage,
     MessageBody,
     WsException,
+    ConnectedSocket,
 } from "@nestjs/websockets";
 import { PollsService } from "./polls.service";
 import { Namespace } from "socket.io";
 import { WsCatchAllFilter } from "src/exceptions/WsCatchAllExceptions";
 import { SocketWithAuth } from "./types";
 import { events as v } from "../polls/types";
+import { GatewayAdminGuard } from "./admin-gateway.guard";
 @WebSocketGateway({
     namespace: "polls",
 })
@@ -35,7 +37,7 @@ export class PollsGateway
 
         const { userID, pollID, name } = client;
         await client.join(pollID);
-        const roomSize = this.io.adapter.rooms?.get(pollID).size ?? 0;
+        const roomSize = this.io.adapter.rooms?.get(pollID)?.size ?? 0;
 
         this.logger.log(`WS Client with id: ${client.id} connected!`);
         this.logger.debug(`Number of connected sockets: ${sockets.size}`);
@@ -59,7 +61,7 @@ export class PollsGateway
             pollID,
             userID,
         });
-        const roomSize = this.io.adapter.rooms?.get(pollID).size ?? 0;
+        const roomSize = this.io.adapter.rooms?.get(pollID)?.size ?? 0;
         if (updatedPoll) {
             await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
         }
@@ -70,9 +72,17 @@ export class PollsGateway
         );
     }
 
-    @SubscribeMessage("test")
-    sendError(@MessageBody() body: any) {
-        console.log(body);
-        throw new BadRequestException("test : Invalid empty data");
+    @SubscribeMessage(v.removeParticipant)
+    @UseGuards(GatewayAdminGuard)
+    async removeParticipant(@MessageBody('id') id: string, @ConnectedSocket() client: SocketWithAuth) {
+        const { pollID, userID, name } = client
+        this.logger.log(`${name} is trying to remove ${id} from poll ${pollID}`)
+        const updatedPoll = await this.pollsService.removeParticipantFromPoll({
+            pollID, userID: id
+        })
+        if (updatedPoll) {
+            await this.io.to(pollID).emit(v.pollUpdated, updatedPoll)
+        }
+
     }
 }

@@ -4,6 +4,7 @@ import { JwtService } from "@nestjs/jwt";
 import { IoAdapter } from "@nestjs/platform-socket.io";
 import { Server, ServerOptions } from "socket.io";
 import { SocketWithAuth } from "src/polls/types";
+import { getJwtFromSocket } from "./utils";
 
 export class SocketIOAdapter extends IoAdapter {
 
@@ -38,7 +39,8 @@ export class SocketIOAdapter extends IoAdapter {
 }
 
 const createTokenMiddleWare = (jwt: JwtService, logger: Logger) => async (socket: SocketWithAuth, next) => {
-    const token = socket.handshake.auth.token || socket.handshake.headers['token']
+
+    const token = getJwtFromSocket(socket)
     logger.debug(`verifying  token ${token}`)
 
     try {

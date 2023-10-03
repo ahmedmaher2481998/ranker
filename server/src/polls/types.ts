@@ -46,7 +46,7 @@ export type RemoveParticipantData = {
 
 
 // Auth types 
-type AuthPayload = {
+export type AuthPayload = {
   userID: string, pollID: string, name: string
 }
 export type RequestWithAuth = AuthPayload & Request
@@ -56,6 +56,7 @@ export type SocketWithAuth = AuthPayload & Socket
 // The names of the events used in the pools namespace 
 export enum events {
   exception = "exception",
-  pollUpdated = "poll_updated"
+  pollUpdated = "poll_updated",
+  removeParticipant = "remove_participant"
 
 }
