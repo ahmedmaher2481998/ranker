@@ -1,49 +1,78 @@
-import { ForbiddenException, Logger } from "@nestjs/common";
-import { WebSocketGateway, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer, SubscribeMessage, MessageBody, WsException } from "@nestjs/websockets";
+import { BadRequestException, Logger, UseFilters } from "@nestjs/common";
+import {
+    WebSocketGateway,
+    OnGatewayInit,
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    WebSocketServer,
+    SubscribeMessage,
+    MessageBody,
+    WsException,
+} from "@nestjs/websockets";
 import { PollsService } from "./polls.service";
-import { Namespace, Socket } from "socket.io";
-
+import { Namespace } from "socket.io";
+import { WsCatchAllFilter } from "src/exceptions/WsCatchAllExceptions";
+import { SocketWithAuth } from "./types";
+import { events as v } from "../polls/types";
 @WebSocketGateway({
-    namespace: 'polls',
-
+    namespace: "polls",
 })
-export class PollsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-    private readonly logger = new Logger('PollsGateway')
+@UseFilters(new WsCatchAllFilter())
+export class PollsGateway
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    private readonly logger = new Logger("PollsGateway");
 
     constructor(private readonly pollsService: PollsService) { }
     @WebSocketServer()
     io: Namespace;
 
     afterInit(server) {
-        this.logger.log('WebSocket Gateway initialized   ...')
+        this.logger.log("WebSocket Gateway initialized   ...");
     }
 
-    handleConnection(client: Socket, ...args: any[]) {
+    async handleConnection(client: SocketWithAuth, ...args: any[]) {
         const sockets = this.io.sockets;
+
+        const { userID, pollID, name } = client;
+        await client.join(pollID);
+        const roomSize = this.io.adapter.rooms?.get(pollID).size ?? 0;
 
         this.logger.log(`WS Client with id: ${client.id} connected!`);
         this.logger.debug(`Number of connected sockets: ${sockets.size}`);
+        this.logger.debug(
+            `Number of connected sockets to after adding to room  ${pollID}: ${roomSize}`
+        );
 
-        // this.io.emit('hello', `from ${client.id}`);
-
+        const updatedPoll = await this.pollsService.addParticipantToPoll({
+            pollID,
+            name,
+            userID,
+        });
+        this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
     }
 
-
-    handleDisconnect(client: Socket) {
+    async handleDisconnect(client: SocketWithAuth) {
         const sockets = this.io.sockets;
-
+        const { userID, pollID } = client;
+        // TODO - remove client from poll and send `participants_updated` event to remaining clients
+        const updatedPoll = await this.pollsService.removeParticipantFromPoll({
+            pollID,
+            userID,
+        });
+        const roomSize = this.io.adapter.rooms?.get(pollID).size ?? 0;
+        if (updatedPoll) {
+            await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
+        }
         this.logger.log(`Disconnected socket id: ${client.id}`);
         this.logger.debug(`Number of connected sockets: ${sockets.size}`);
-
-        // TODO - remove client from poll and send `participants_updated` event to remaining clients
+        this.logger.debug(
+            `Number of connected sockets ad removing ${userID}: ${roomSize}`
+        );
     }
 
-
-    @SubscribeMessage('test')
+    @SubscribeMessage("test")
     sendError(@MessageBody() body: any) {
-        console.log(body)
-        throw new WsException(body)
-
+        console.log(body);
+        throw new BadRequestException("test : Invalid empty data");
     }
-
 }
