@@ -1,12 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import {
+  AddNominationFields,
   AddParticipantFields,
+  RemoveNominationFields,
   RemoveParticipantFields,
   createPollFields,
   joinPollFields,
   rejoinPollFields,
-} from "./types";
-import { generateUserId, generatePollId } from "src//ids";
+} from "./types/types";
+import { generateUserId, generatePollId, generateNominationId } from "src//ids";
 import { PollsRepository } from "./polls.repository";
 type getSignedStringProps = {
   userName: String;
@@ -79,21 +81,37 @@ export class PollsService {
     return this.pollsRepo.getPoll(pollID);
   }
   async removeParticipantFromPoll(
-    removeParticipantFields: RemoveParticipantFields
+    removeParticipant: RemoveParticipantFields
   ): Promise<Poll | void> {
-    const { userID, pollID } = removeParticipantFields;
+    const { userID, pollID } = removeParticipant;
 
     const poll = await this.pollsRepo.getPoll(pollID);
 
     if (!poll.hasStarted) {
-
       const updatedPoll = await this.pollsRepo.removeParticipant(
-        removeParticipantFields
+        removeParticipant
       );
       if (updatedPoll) {
         return updatedPoll;
       }
-
     }
+  }
+
+  async addNomination({ pollID, text, userID }: AddNominationFields) {
+    const nominationID = generateNominationId();
+    return await this.pollsRepo.addNomination({
+      nomination: {
+        text,
+        userID,
+      },
+      nominationID,
+      pollID,
+    });
+  }
+
+  async removeNomination({ nominationID, pollID }: RemoveNominationFields) {
+    return await this.pollsRepo.removeNomination({
+      nominationID, pollID
+    })
   }
 }

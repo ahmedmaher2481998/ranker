@@ -1,4 +1,4 @@
-import { SocketWithAuth } from "src/polls/types"
+import { SocketWithAuth } from "src/polls/types/types"
 
 
 export const getJwtFromSocket = (socket: SocketWithAuth): string => {

@@ -6,6 +6,7 @@ import {
   Max,
   Min,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 export class CreatePollDto {
   @IsNotEmpty()
@@ -34,4 +35,19 @@ export class JoinPollDto {
   @IsString()
   @Length(1, 25)
   name: string;
+}
+
+
+
+export class AddNominationDTO {
+  @IsNotEmpty()
+  @MinLength(1)
+  @MaxLength(100)
+  text: string
+}
+
+export class RemoveNominationDTO {
+  @IsNotEmpty()
+  @Length(8)
+  id: string
 }

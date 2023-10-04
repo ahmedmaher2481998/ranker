@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { IoAdapter } from "@nestjs/platform-socket.io";
 import { Server, ServerOptions } from "socket.io";
-import { SocketWithAuth } from "src/polls/types";
+import { SocketWithAuth } from "src/polls/types/types";
 import { getJwtFromSocket } from "./utils";
 
 export class SocketIOAdapter extends IoAdapter {

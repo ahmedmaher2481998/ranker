@@ -4,14 +4,14 @@ import {
     Catch,
     ExceptionFilter,
 } from "@nestjs/common";
-import { SocketWithAuth } from "src/polls/types";
+import { SocketWithAuth } from "src/polls/types/types";
 import {
     WsBadRequestException,
     WsTypeException,
     WsUnauthorizedException,
     WsUnknownException,
 } from "./WsEception";
-import { events as v } from "../polls/types";
+import { events as v } from "../polls/types/types";
 @Catch()
 export class WsCatchAllFilter implements ExceptionFilter {
     catch(exception: Error, host: ArgumentsHost): void {
@@ -32,6 +32,7 @@ export class WsCatchAllFilter implements ExceptionFilter {
             socket.emit(v.exception, exception.getError());
         } else {
             const wsException = new WsUnknownException(exception.name);
+            console.log('error ', exception);
             socket.emit(v.exception, wsException.getError());
         }
     }

@@ -1,11 +1,11 @@
-version: '3.8'
+version: "3.9"
 
 services:
   redis:
-    image: 'redislabs/rejson:2.0.0'
+    image: "redislabs/redis:latest"
     ports:
-      - '6379:6379'
+      - "5000:6379"
     volumes:
-      - 'redisdata:/data'
+      - "./db:/data"
 volumes:
   redisdata:

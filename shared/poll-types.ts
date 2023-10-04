@@ -9,7 +9,18 @@ export interface Poll {
   participants: Participants;
   hasStarted: boolean
   //   TODO 
-  //  nominations ,
+  nominations: Nominations,
   //  rankings ,
   //  results ,
+}
+
+
+type NominationID = string
+export type Nominations = {
+  [nominationID: NominationID]: Nomination
+}
+
+export type Nomination = {
+  userID: string,
+  text: string;
 }

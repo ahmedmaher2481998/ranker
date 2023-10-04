@@ -1,8 +1,8 @@
 import { Body, Controller, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { CreatePollDto, JoinPollDto } from './dtos';
+import { CreatePollDto, JoinPollDto } from './types/dtos';
 import { PollsService } from './polls.service';
-import { ControllerAuthGuard } from './auth-controller.guard';
-import { RequestWithAuth } from './types';
+import { ControllerAuthGuard } from './guards/auth-controller.guard';
+import { RequestWithAuth } from './types/types';
 
 @Controller('polls')
 @UsePipes(new ValidationPipe())

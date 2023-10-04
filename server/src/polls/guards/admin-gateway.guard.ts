@@ -4,8 +4,8 @@ import {
     Injectable,
     Logger,
 } from "@nestjs/common";
-import { AuthPayload, SocketWithAuth } from "./types";
-import { PollsService } from "./polls.service";
+import { AuthPayload, SocketWithAuth } from "../types/types";
+import { PollsService } from "../polls.service";
 import { JwtService } from "@nestjs/jwt";
 import { getJwtFromSocket } from "src/config/utils";
 import { WsUnauthorizedException } from "src/exceptions/WsEception";

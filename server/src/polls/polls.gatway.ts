@@ -1,4 +1,9 @@
-import { BadRequestException, Logger, UseFilters, UseGuards } from "@nestjs/common";
+import {
+    BadRequestException,
+    Logger,
+    UseFilters,
+    UseGuards,
+} from "@nestjs/common";
 import {
     WebSocketGateway,
     OnGatewayInit,
@@ -13,9 +18,10 @@ import {
 import { PollsService } from "./polls.service";
 import { Namespace } from "socket.io";
 import { WsCatchAllFilter } from "src/exceptions/WsCatchAllExceptions";
-import { SocketWithAuth } from "./types";
-import { events as v } from "../polls/types";
-import { GatewayAdminGuard } from "./admin-gateway.guard";
+import { RemoveNominationFields, SocketWithAuth } from "./types/types";
+import { events as v } from "../polls/types/types";
+import { GatewayAdminGuard } from "./guards/admin-gateway.guard";
+import { AddNominationDTO, RemoveNominationDTO } from "./types/dtos";
 @WebSocketGateway({
     namespace: "polls",
 })
@@ -27,7 +33,7 @@ export class PollsGateway
     constructor(private readonly pollsService: PollsService) { }
     @WebSocketServer()
     io: Namespace;
-
+    // main module handlers 
     afterInit(server) {
         this.logger.log("WebSocket Gateway initialized   ...");
     }
@@ -71,18 +77,54 @@ export class PollsGateway
             `Number of connected sockets ad removing ${userID}: ${roomSize}`
         );
     }
+    // Add Participants 
 
     @SubscribeMessage(v.removeParticipant)
     @UseGuards(GatewayAdminGuard)
-    async removeParticipant(@MessageBody('id') id: string, @ConnectedSocket() client: SocketWithAuth) {
-        const { pollID, userID, name } = client
-        this.logger.log(`${name} is trying to remove ${id} from poll ${pollID}`)
+    async removeParticipant(
+        @MessageBody("id") id: string,
+        @ConnectedSocket() client: SocketWithAuth
+    ) {
+        const { pollID, userID, name } = client;
+        this.logger.log(`${name} is trying to remove ${id} from poll ${pollID}`);
         const updatedPoll = await this.pollsService.removeParticipantFromPoll({
-            pollID, userID: id
-        })
+            pollID,
+            userID: id,
+        });
         if (updatedPoll) {
-            await this.io.to(pollID).emit(v.pollUpdated, updatedPoll)
+            await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
         }
+    }
+    // Nomination 
+    @SubscribeMessage(v.addNomination)
+    async addNomination(
+        @MessageBody() { text }: AddNominationDTO,
+        @ConnectedSocket() client: SocketWithAuth
+    ) {
+        const { userID, pollID } = client;
+        const updatedPoll = await this.pollsService.addNomination({
+            pollID,
+            text,
+            userID,
+        });
+        if (updatedPoll) {
+            await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
+        }
+    }
 
+    @SubscribeMessage(v.removeNomination)
+    @UseGuards(GatewayAdminGuard)
+    async removeNomination(
+        @MessageBody() { id }: RemoveNominationDTO,
+        @ConnectedSocket() client: SocketWithAuth
+    ) {
+        const { pollID } = client;
+        const updatedPoll = await this.pollsService.removeNomination({
+            pollID,
+            nominationID: id,
+        });
+        if (updatedPoll) {
+            await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
+        }
     }
 }
