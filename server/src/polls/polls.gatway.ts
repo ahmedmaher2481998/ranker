@@ -1,9 +1,4 @@
-import {
-    BadRequestException,
-    Logger,
-    UseFilters,
-    UseGuards,
-} from "@nestjs/common";
+import { Logger, UseFilters, UseGuards } from "@nestjs/common";
 import {
     WebSocketGateway,
     OnGatewayInit,
@@ -12,14 +7,13 @@ import {
     WebSocketServer,
     SubscribeMessage,
     MessageBody,
-    WsException,
     ConnectedSocket,
 } from "@nestjs/websockets";
 import { PollsService } from "./polls.service";
 import { Namespace } from "socket.io";
 import { WsCatchAllFilter } from "src/exceptions/WsCatchAllExceptions";
-import { RemoveNominationFields, SocketWithAuth } from "./types/types";
-import { events as v } from "../polls/types/types";
+import { SocketWithAuth } from "./types/types";
+import { events as v } from "./types/types";
 import { GatewayAdminGuard } from "./guards/admin-gateway.guard";
 import { AddNominationDTO, RemoveNominationDTO } from "./types/dtos";
 @WebSocketGateway({
@@ -33,7 +27,7 @@ export class PollsGateway
     constructor(private readonly pollsService: PollsService) { }
     @WebSocketServer()
     io: Namespace;
-    // main module handlers 
+    // main module handlers
     afterInit(server) {
         this.logger.log("WebSocket Gateway initialized   ...");
     }
@@ -77,7 +71,7 @@ export class PollsGateway
             `Number of connected sockets ad removing ${userID}: ${roomSize}`
         );
     }
-    // Add Participants 
+    // Add Participants
 
     @SubscribeMessage(v.removeParticipant)
     @UseGuards(GatewayAdminGuard)
@@ -95,7 +89,7 @@ export class PollsGateway
             await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
         }
     }
-    // Nomination 
+    // Nomination
     @SubscribeMessage(v.addNomination)
     async addNomination(
         @MessageBody() { text }: AddNominationDTO,
@@ -112,8 +106,8 @@ export class PollsGateway
         }
     }
 
-    @SubscribeMessage(v.removeNomination)
     @UseGuards(GatewayAdminGuard)
+    @SubscribeMessage(v.removeNomination)
     async removeNomination(
         @MessageBody() { id }: RemoveNominationDTO,
         @ConnectedSocket() client: SocketWithAuth
@@ -122,6 +116,18 @@ export class PollsGateway
         const updatedPoll = await this.pollsService.removeNomination({
             pollID,
             nominationID: id,
+        });
+        if (updatedPoll) {
+            await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
+        }
+    }
+
+    @SubscribeMessage(v.startPoll)
+    @UseGuards(GatewayAdminGuard)
+    async starPoll(@ConnectedSocket() client: SocketWithAuth) {
+        const { pollID } = client;
+        const updatedPoll = await this.pollsService.startPoll({
+            pollID,
         });
         if (updatedPoll) {
             await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);

@@ -8,13 +8,15 @@ export interface Poll {
   adminId: string;
   participants: Participants;
   hasStarted: boolean
-  //   TODO 
   nominations: Nominations,
-  //  rankings ,
+  rankings: Rankings,
+  //   TODO 
   //  results ,
 }
 
-
+type Rankings = {
+  [userId: string]: NominationID[]
+}
 type NominationID = string
 export type Nominations = {
   [nominationID: NominationID]: Nomination

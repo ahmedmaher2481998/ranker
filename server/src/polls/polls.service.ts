@@ -4,6 +4,7 @@ import {
   AddParticipantFields,
   RemoveNominationFields,
   RemoveParticipantFields,
+  StartPollFields,
   createPollFields,
   joinPollFields,
   rejoinPollFields,
@@ -37,12 +38,13 @@ export class PollsService {
   async create({ name, topic, votesPerVoter }: createPollFields) {
     const pollID = generatePollId();
     const userID = generateUserId();
-    await this.pollsRepo.createPoll({
+    const pollData = {
       pollID,
       userID,
       topic,
       votesPerVoter,
-    });
+    };
+    await this.pollsRepo.createPoll(pollData);
     const poll = await this.pollsRepo.getPoll(pollID);
     const accessToken = await this.getSignedString({
       pollID,
@@ -111,7 +113,12 @@ export class PollsService {
 
   async removeNomination({ nominationID, pollID }: RemoveNominationFields) {
     return await this.pollsRepo.removeNomination({
-      nominationID, pollID
-    })
+      nominationID,
+      pollID,
+    });
+  }
+
+  async startPoll({ pollID }: StartPollFields) {
+    return await this.pollsRepo.startPoll(pollID);
   }
 }

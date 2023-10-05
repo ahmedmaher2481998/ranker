@@ -51,3 +51,6 @@ export class RemoveNominationDTO {
   @Length(8)
   id: string
 }
+
+
+
