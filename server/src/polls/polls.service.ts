@@ -20,6 +20,7 @@ type getSignedStringProps = {
 import { JwtService } from "@nestjs/jwt";
 import { Poll } from "shared";
 import { WsBadRequestException } from "src/exceptions/WsEception";
+import { getPollResults } from "./getPollResults";
 @Injectable()
 export class PollsService {
   constructor(
@@ -131,5 +132,17 @@ export class PollsService {
         `poll with id ${rankingsData.pollID} has not started yet.`
       );
     return await this.pollsRepo.addParticipantRankings(rankingsData);
+  }
+
+  async computeResults(pollID: string): Promise<Poll> {
+    const { nominations, rankings, votesPerVoter } = await this.pollsRepo.getPoll(pollID);
+    const results = getPollResults({
+      nominations, rankings, votesPerVoter
+
+    });
+    return this.pollsRepo.addResults(pollID, results);
+  }
+  async cancelPoll(pollID: string): Promise<void> {
+    return await this.pollsRepo.deletePollWithId(pollID);
   }
 }

@@ -98,4 +98,7 @@ export enum events {
   removeNomination = "remove_nomination",
   startPoll = "start_poll",
   submitRankings = "submit_rankings",
+  closePoll = "close_poll",
+  cancelPoll = "cancel_poll",
+  pollCancelled = "poll_cancelled"
 }

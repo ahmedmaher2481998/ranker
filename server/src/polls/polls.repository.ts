@@ -16,9 +16,9 @@ import {
   RemoveParticipantData,
   AddParticipantRankingsData,
 } from "./types/types";
-import { Poll } from "shared";
-import { GatewayAdminGuard } from "./guards/admin-gateway.guard";
-import { wsInternalServerError } from "src/exceptions/WsEception";
+import { Poll, Results } from "shared";
+// import { GatewayAdminGuard } from "./guards/admin-gateway.guard";
+// import { wsInternalServerError } from "src/exceptions/WsEception";
 @Injectable()
 export class PollsRepository {
   // time to live
@@ -47,7 +47,8 @@ export class PollsRepository {
       votesPerVoter,
       participants: {},
       nominations: {},
-      rankings: {}
+      rankings: {},
+      results: []
     };
     const key = this.getKey(pollID);
 
@@ -194,6 +195,41 @@ export class PollsRepository {
       this.logger.error(`Failed to submit rankings for userID : ${userID} rankings`, rankings)
       this.logger.error(err.message)
       throw new InternalServerErrorException(err.message)
+
+    }
+  }
+
+  async addResults(pollID: string, results: Results) {
+    this.logger.log(
+      `Attempting to add results to pollID: ${pollID}`,
+      JSON.stringify(results),
+    );
+    try {
+      await this.redis.send_command("JSON.SET", this.getKey(pollID), '.results', JSON.stringify(results))
+
+      return await this.getPoll(pollID)
+
+    } catch (e) {
+      this.logger.error(
+        `Failed to add add results for pollID: ${pollID}`,
+        results,
+        e,
+      );
+      throw new InternalServerErrorException(
+        `Failed to add add results for pollID: ${pollID}`,
+      );
+    }
+
+  }
+  async deletePollWithId(pollID: string) {
+    try {
+      await this.redis.send_command("JSON.DEL", this.getKey(pollID), '.')
+
+    } catch (error) {
+      this.logger.error(`Failed to delete poll: ${pollID}`, error);
+      throw new InternalServerErrorException(
+        `Failed to delete poll: ${pollID}`,
+      );
 
     }
   }

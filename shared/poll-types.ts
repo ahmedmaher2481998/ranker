@@ -2,9 +2,14 @@ export interface Participants {
   [participantId: string]: string;
 }
 type NominationID = string
-type Rankings = {
+export type Rankings = {
   [userId: string]: NominationID[]
 }
+export type Results = Array<{
+  nominationID: NominationID,
+  nominationText: string,
+  score: number
+}>
 export interface Poll {
   id: string;
   topic: string;
@@ -14,8 +19,7 @@ export interface Poll {
   hasStarted: boolean
   nominations: Nominations,
   rankings: Rankings,
-  //   TODO 
-  //  results ,
+  results: Results,
 }
 
 export type Nomination = {

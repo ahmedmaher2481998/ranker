@@ -134,7 +134,6 @@ export class PollsGateway
     }
 
     @SubscribeMessage(v.submitRankings)
-    @UseGuards(GatewayAdminGuard)
     async submitParticipantRankings(
         @ConnectedSocket() client: SocketWithAuth,
         @MessageBody("rankings") rankings: string[]
@@ -151,6 +150,21 @@ export class PollsGateway
         // we may add this while working on the client
 
         await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
+    }
 
+    @UseGuards(GatewayAdminGuard)
+    @SubscribeMessage(v.cancelPoll)
+    async cancelPoll(@ConnectedSocket() client: SocketWithAuth) {
+        this.logger.debug(`Cancelling poll with id: "${client.pollID}"`);
+        await this.pollsService.cancelPoll(client.pollID);
+        this.io.to(client.pollID).emit(v.pollCancelled);
+    }
+
+    @UseGuards(GatewayAdminGuard)
+    @SubscribeMessage(v.closePoll)
+    async closePoll(@ConnectedSocket() client: SocketWithAuth) {
+        const { pollID } = client;
+        const updatedPoll = await this.pollsService.computeResults(pollID);
+        this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
     }
 }
