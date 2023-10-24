@@ -14,13 +14,15 @@ import {
   CreatePollData,
   RemoveNominationData,
   RemoveParticipantData,
+  AddParticipantRankingsData,
 } from "./types/types";
 import { Poll } from "shared";
 import { GatewayAdminGuard } from "./guards/admin-gateway.guard";
+import { wsInternalServerError } from "src/exceptions/WsEception";
 @Injectable()
 export class PollsRepository {
   // time to live
-  private ttl: string;
+  private ttl: number;
   private logger = new Logger(PollsRepository.name);
   public getKey = (pollId: string) => `polls:${pollId}`;
 
@@ -28,7 +30,7 @@ export class PollsRepository {
     private readonly configService: ConfigService,
     @Inject(IoRedisKey) private readonly redis: Redis
   ) {
-    this.ttl = configService.get("POLL_DURATION");
+    this.ttl = parseInt(configService.get("POLL_DURATION"));
   }
 
   async createPoll({
@@ -53,17 +55,11 @@ export class PollsRepository {
       `Creating new poll: ${initialPoll.topic} with TTL ${this.ttl}`
     );
     try {
-      // thanks ChatGPT :)
-      // await this.redis.set(key, JSON.stringify(initialPoll), "EX", this.til);
-      // this.redis.send_command('JSON.SET', key, JSON.stringify(initialPoll), "EX", this.til);
-      // return initialPoll;
 
       await this.redis
-        .multi([
-          ['send_command', 'JSON.SET', key, '.', JSON.stringify(initialPoll)],
-          ['expire', key, this.ttl],
-        ])
-        .exec();
+        .send_command(
+          'JSON.SET', key, '.', JSON.stringify(initialPoll))
+      await this.redis.expire(key, this.ttl)
       return initialPoll;
     } catch (error) {
       console.error(error);
@@ -79,7 +75,7 @@ export class PollsRepository {
       this.logger.log(`getting poll with id  ${pollID}`);
       const poll = await this.redis.send_command("JSON.GET", this.getKey(pollID));
       if (!poll) throw new ForbiddenException("poll doesn't exist ...");
-      this.logger.verbose(poll);
+      else this.logger.verbose(poll);
       return JSON.parse(poll) as Poll;
     } catch (error) {
       this.logger.error(`Failed to get poll with id ${pollID}`);
@@ -93,13 +89,10 @@ export class PollsRepository {
     userID,
   }: AddParticipantData): Promise<Poll> {
     try {
-      const poll = (await this.getPoll(pollID)) as Poll;
-      poll.participants[`${userID}`] = name;
-      //TODO 
-      await this.redis.set(this.getKey(pollID), JSON.stringify(poll));
-
+      await this.redis.send_command('JSON.SET', this.getKey(pollID), `.participants.${userID}`, JSON.stringify(name))
       return await this.getPoll(pollID);
     } catch (error) {
+      this.logger.error('Error joining a poll', error)
       throw error;
     }
   }
@@ -109,10 +102,10 @@ export class PollsRepository {
     userID,
   }: RemoveParticipantData): Promise<Poll> {
     try {
-      const poll = (await this.getPoll(pollID)) as Poll;
-      delete poll.participants[`${userID}`];
-      //TODO 
-      await this.redis.set(this.getKey(pollID), JSON.stringify(poll));
+      const key = this.getKey(pollID)
+      const path = `.participants.${userID}`
+
+      await this.redis.send_command("JSON.DEL", key, path)
       return await this.getPoll(pollID);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -123,20 +116,16 @@ export class PollsRepository {
 
   async addNomination({ nomination, nominationID, pollID }: AddNominationData) {
 
-    // const key = this.getKey(pollID);
-    // const nominationPath = `.nominations.${nominationID}`;
+    const key = this.getKey(pollID);
+    const nominationPath = `.nominations.${nominationID}`;
     this.logger.debug(`adding nomination  to poll ${pollID}`, nomination);
     try {
-      // await await this.redis.send_command(
-      //   'JSON.SET',
-      //   key,
-      //   nominationPath,
-      //   JSON.stringify(nomination),
-      // );
-      const poll = await this.getPoll(pollID)
-      poll.nominations[`${nominationID}`] = nomination
-      //TODO 
-      this.redis.set(this.getKey(pollID), JSON.stringify(poll))
+      await this.redis.send_command(
+        'JSON.SET',
+        key,
+        nominationPath,
+        JSON.stringify(nomination),
+      );
       return await this.getPoll(pollID);
     } catch (error) {
       console.error('Error happened in polls repo ', error)
@@ -150,21 +139,16 @@ export class PollsRepository {
 
   async removeNomination({ nominationID, pollID }: RemoveNominationData) {
 
-    // const key = this.getKey(pollID);
-
-    // const nominationPath = `.nominations.${nominationID}`;
 
     this.logger.debug(
       `removing  nomination  to poll ${pollID} with id ${nominationID}`
     );
 
     try {
-      // await this.redis.send_command("JSON.DEL", key, nominationPath);
 
-      const poll = await this.getPoll(pollID);
-      delete poll.nominations[`${nominationID}`]
-      //TODO 
-      this.redis.set(this.getKey(pollID), JSON.stringify(poll))
+      const key = this.getKey(pollID)
+      const path = `.nominations.${nominationID}`
+      await this.redis.send_command('JSON.DEL', key, path)
       return await this.getPoll(pollID);
     } catch (error) {
       throw new InternalServerErrorException(
@@ -175,12 +159,13 @@ export class PollsRepository {
 
   async startPoll(pollID: string) {
     this.logger.log(`setting hasStarted for poll: ${pollID}`);
-
+    const key = this.getKey(pollID)
+    const path = ".hasStarted"
     try {
       await this.redis.send_command(
         "JSON.SET",
-        this.getKey(pollID),
-        ".hasStarted",
+        key,
+        path,
         JSON.stringify(true)
       )
       return await this.getPoll(pollID)
@@ -191,5 +176,25 @@ export class PollsRepository {
         , error.message);
     }
 
+  }
+
+
+  async addParticipantRankings({ pollID, rankings, userID }: AddParticipantRankingsData) {
+    this.logger.log(
+      `Attempting to add rankings for userID/name: ${userID} to pollID: ${pollID}`,
+      rankings,
+    );
+
+    try {
+      const key = this.getKey(pollID)
+      const path = `.rankings.${userID}`
+      await this.redis.send_command("JSON.SET", key, path, JSON.stringify(rankings))
+      return await this.getPoll(pollID)
+    } catch (err) {
+      this.logger.error(`Failed to submit rankings for userID : ${userID} rankings`, rankings)
+      this.logger.error(err.message)
+      throw new InternalServerErrorException(err.message)
+
+    }
   }
 }

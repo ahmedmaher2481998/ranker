@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import {
   AddNominationFields,
   AddParticipantFields,
+  AddParticipantRankingsFields,
   RemoveNominationFields,
   RemoveParticipantFields,
   StartPollFields,
@@ -18,6 +19,7 @@ type getSignedStringProps = {
 };
 import { JwtService } from "@nestjs/jwt";
 import { Poll } from "shared";
+import { WsBadRequestException } from "src/exceptions/WsEception";
 @Injectable()
 export class PollsService {
   constructor(
@@ -120,5 +122,14 @@ export class PollsService {
 
   async startPoll({ pollID }: StartPollFields) {
     return await this.pollsRepo.startPoll(pollID);
+  }
+
+  async submitParticipantRankings(rankingsData: AddParticipantRankingsFields) {
+    const poll = await this.pollsRepo.getPoll(rankingsData.pollID);
+    if (!poll.hasStarted)
+      throw new BadRequestException(
+        `poll with id ${rankingsData.pollID} has not started yet.`
+      );
+    return await this.pollsRepo.addParticipantRankings(rankingsData);
   }
 }

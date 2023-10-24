@@ -39,6 +39,12 @@ export class StartPollFields {
   pollID: string;
 }
 
+export class AddParticipantRankingsFields {
+  pollID: string;
+  userID: string;
+  rankings: string[];
+}
+
 // Polls Repository Types
 export type CreatePollData = {
   pollID: string;
@@ -69,6 +75,11 @@ export type RemoveNominationData = {
   nominationID: string;
 };
 
+export type AddParticipantRankingsData = {
+  userID: string;
+  pollID: string;
+  rankings: string[];
+};
 // Auth types
 export type AuthPayload = {
   userID: string;
@@ -78,13 +89,13 @@ export type AuthPayload = {
 export type RequestWithAuth = AuthPayload & Request;
 export type SocketWithAuth = AuthPayload & Socket;
 
-
 // The names of the events used in the pools namespace
 export enum events {
   exception = "exception",
   pollUpdated = "poll_updated",
   removeParticipant = "remove_participant",
-  addNomination = 'add_nomination',
-  removeNomination = 'remove_nomination',
-  startPoll = 'start_poll',
-} 
+  addNomination = "add_nomination",
+  removeNomination = "remove_nomination",
+  startPoll = "start_poll",
+  submitRankings = "submit_rankings",
+}

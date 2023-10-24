@@ -1,6 +1,10 @@
 export interface Participants {
   [participantId: string]: string;
 }
+type NominationID = string
+type Rankings = {
+  [userId: string]: NominationID[]
+}
 export interface Poll {
   id: string;
   topic: string;
@@ -14,15 +18,10 @@ export interface Poll {
   //  results ,
 }
 
-type Rankings = {
-  [userId: string]: NominationID[]
-}
-type NominationID = string
-export type Nominations = {
-  [nominationID: NominationID]: Nomination
-}
-
 export type Nomination = {
   userID: string,
   text: string;
+}
+export type Nominations = {
+  [nominationID: NominationID]: Nomination
 }

@@ -42,7 +42,7 @@ export class PollsGateway
         this.logger.log(`WS Client with id: ${client.id} connected!`);
         this.logger.debug(`Number of connected sockets: ${sockets.size}`);
         this.logger.debug(
-            `Number of connected sockets to after adding to room  ${pollID}: ${roomSize}`
+            `Number of connected sockets to after adding to room ${pollID}: ${roomSize}`
         );
 
         const updatedPoll = await this.pollsService.addParticipantToPoll({
@@ -56,7 +56,7 @@ export class PollsGateway
     async handleDisconnect(client: SocketWithAuth) {
         const sockets = this.io.sockets;
         const { userID, pollID } = client;
-        // TODO - remove client from poll and send `participants_updated` event to remaining clients
+        // TODO - remove client from poll and send `poll_updated` event to remaining clients
         const updatedPoll = await this.pollsService.removeParticipantFromPoll({
             pollID,
             userID,
@@ -71,7 +71,6 @@ export class PollsGateway
             `Number of connected sockets ad removing ${userID}: ${roomSize}`
         );
     }
-    // Add Participants
 
     @SubscribeMessage(v.removeParticipant)
     @UseGuards(GatewayAdminGuard)
@@ -132,5 +131,26 @@ export class PollsGateway
         if (updatedPoll) {
             await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
         }
+    }
+
+    @SubscribeMessage(v.submitRankings)
+    @UseGuards(GatewayAdminGuard)
+    async submitParticipantRankings(
+        @ConnectedSocket() client: SocketWithAuth,
+        @MessageBody("rankings") rankings: string[]
+    ): Promise<void> {
+        const { userID, pollID } = client;
+        const updatedPoll = await this.pollsService.submitParticipantRankings({
+            pollID,
+            rankings,
+            userID,
+        });
+        // an enhancement might be to not send ranking data to clients,
+        // but merely a list of the participants who have voted since another
+        // participant getting this data could lead to cheating
+        // we may add this while working on the client
+
+        await this.io.to(pollID).emit(v.pollUpdated, updatedPoll);
+
     }
 }
