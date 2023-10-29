@@ -1,7 +1,7 @@
-import { Logger } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { RedisModule } from './redis.module';
-import { JwtModule } from '@nestjs/jwt'
+import { Logger } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { RedisModule } from "./redis.module";
+import { JwtModule } from "@nestjs/jwt";
 
 export const jwtModule = JwtModule.registerAsync({
   imports: [ConfigModule],
@@ -9,30 +9,33 @@ export const jwtModule = JwtModule.registerAsync({
     return {
       secret: configService.get<string>("JWT_SECRET"),
       signOptions: {
-        expiresIn: parseInt(configService.get<string>('POLL_DURATION'))
-      }
-    }
+        expiresIn: parseInt(configService.get<string>("POLL_DURATION")),
+      },
+    };
   },
   inject: [ConfigService],
-})
+});
 export const redisModule = RedisModule.registerAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
-    const logger = new Logger('redis');
+    const logger = new Logger("redis");
     return {
       connectionOptions: {
-        host: configService.get('REDIS_HOST'),
-        port: configService.get('REDIS_PORT'),
+        host: configService.get("REDIS_HOST_PROD"),
+        password: configService.get("REDIS_PASS_PROD"),
+        port: configService.get("REDIS_PORT_PROD"),
+        // host: configService.get('REDIS_HOST'),
+        // port: configService.get('REDIS_PORT'),
       },
       onClientReady(redis) {
-        logger.log('Redis is ready...');
-        redis.on('error', (err) => {
-          logger.error('Redis client Error:', err);
+        logger.log("Redis is ready...");
+        redis.on("error", (err) => {
+          logger.error("Redis client Error:", err);
         });
-        redis.on('connect', () => {
+        redis.on("connect", () => {
           logger.log(
-            `Connected to redis on ${redis.options.host}:${redis.options.port}`,
+            `Connected to redis on ${redis.options.host}:${redis.options.port}`
           );
         });
       },
