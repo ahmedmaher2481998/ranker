@@ -5,11 +5,13 @@ import { AppPage, state } from './state';
 import Create from './pages/Create';
 import Join from './pages/Join';
 import { CSSTransition } from 'react-transition-group';
+import StartOver from './pages/StartOver';
 
 const routeConfig = {
   [AppPage.welcome]: Welcome,
   [AppPage.create]: Create,
   [AppPage.join]: Join,
+  [AppPage.startOver]: StartOver,
 };
 const Pages = () => {
   const currentState = useSnapshot(state);
