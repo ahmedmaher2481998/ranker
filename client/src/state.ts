@@ -2,7 +2,8 @@ import { Poll } from 'shared/poll-types';
 import { proxy, ref } from 'valtio';
 import { derive, subscribeKey } from 'valtio/utils';
 import { Socket } from 'socket.io-client'
-export enum AppPage {
+import { createSocketWithHandlers, socketIoUrl } from './socket-io'
+enum AppPage {
     join = 'join',
     create = 'create',
     welcome = 'welcome',
@@ -13,7 +14,7 @@ type Me = {
     id: string,
     name: string
 }
-export type AppState = {
+type AppState = {
     currentPage: AppPage;
     loading: boolean;
     poll?: Poll;
@@ -45,8 +46,23 @@ const actions = {
     },
     setPollAccessToken: (token?: string): void => {
         state.accessToken = token;
-    },
+    }, initializeSocket: (): void => {
+        if (!state.socket) {
+            state.socket = ref(
+                createSocketWithHandlers({
+                    state, actions, socketIoUrl
+                })
+            )
+        } else {
+            state.socket.connect()
+        }
+
+    }, updatePoll: (poll: Poll) => {
+        state.poll = poll
+    }
 };
+
+
 const computedWithState = derive(
     {
         me: (get) => {
@@ -80,4 +96,6 @@ subscribeKey(state, "accessToken", () => {
         localStorage.removeItem('accessToken')
     }
 })
-export { computedWithState as state, actions };
+
+type AppActions = typeof actions
+export { computedWithState as state, actions, type AppActions, type AppState, AppPage };
