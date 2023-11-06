@@ -24,7 +24,7 @@ const Create: React.FC = () => {
     const { data, error } = await makeRequest<{
       poll: Poll;
       accessToken: string;
-    }>('/polls', {
+    }>('/api/polls', {
       method: 'POST',
       body: JSON.stringify({
         topic: pollTopic,

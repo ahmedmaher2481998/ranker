@@ -54,7 +54,7 @@ export class PollsService {
       userID,
       userName: name,
     });
-    return { poll, accessToken };
+    return { poll, accessToken }
   }
 
   async join({ name, pollID }: joinPollFields) {
