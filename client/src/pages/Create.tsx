@@ -2,20 +2,53 @@ import React, { useState } from 'react';
 import CountSelector from '../components/ui/CountSelector';
 import { actions } from '../state';
 import { makeRequest } from '../api';
+import { Poll } from 'shared/poll-types';
+import { AppPage } from '../state';
 
 const Create: React.FC = () => {
   const [pollTopic, setPollTopic] = useState('');
-  const [maxVotes, setMaxVotes] = useState(3);
+  const [votesPerVoter, setVotesPerVoter] = useState(3);
   const [name, setName] = useState('');
   const [apiError, setApiError] = useState('');
 
   const areFieldsValid = (): boolean => {
     if (pollTopic.length > 100 || pollTopic.length < 1) return false;
-    else if (maxVotes > 5 || maxVotes < 1) return false;
+    else if (votesPerVoter > 5 || votesPerVoter < 1) return false;
     else if (name.length > 25 || name.length < 1) return false;
     else return true;
   };
-  const handleCreatePoll = async () => {};
+  const handleCreatePoll = async () => {
+    actions.startLoading();
+    setApiError('');
+
+    const { data, error } = await makeRequest<{
+      poll: Poll;
+      accessToken: string;
+    }>('/polls', {
+      method: 'POST',
+      body: JSON.stringify({
+        topic: pollTopic,
+        votesPerVoter,
+        name,
+      }),
+    });
+
+    console.log('data=', data);
+    console.log('error=', error);
+
+    if (error && error.statusCode === 400) {
+      console.log('400 error', error);
+      setApiError('Name and poll topic are both required!');
+    } else if (error && error.statusCode !== 400) {
+      setApiError(error.messages[0]);
+    } else {
+      actions.initializePoll(data.poll);
+      actions.setPollAccessToken(data.accessToken);
+      actions.setPage(AppPage.waitingRoom);
+    }
+
+    actions.stopLoading();
+  };
   return (
     <div className="flex flex-col w-full justify-center items-stretch  h-full mx-auto max-w-sm ">
       <div className="mb-12">
@@ -36,7 +69,7 @@ const Create: React.FC = () => {
             initial={3}
             max={5}
             min={1}
-            onChange={(val) => setMaxVotes(val)}
+            onChange={(val) => setVotesPerVoter(val)}
             step={1}
           />
         </div>
@@ -62,6 +95,7 @@ const Create: React.FC = () => {
           disabled={!areFieldsValid()}
           onClick={() => {
             console.log('Create');
+            handleCreatePoll();
           }}
           className="box btn-orange w-32 my-2"
         >

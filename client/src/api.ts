@@ -1,6 +1,4 @@
-const baseApiUrl = `http://${import.meta.env.VITE_API_HOST}:${
-  import.meta.env.VITE_API_PORT
-}`;
+const baseApiUrl = `http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT}`;
 
 interface APIError {
   messages: string[];
@@ -41,15 +39,15 @@ const makeRequest = async <T>(
     const error =
       e instanceof Error
         ? {
-            messages: [
-              import.meta.env.MODE === 'development'
-                ? e.message
-                : 'Unknown error',
-            ],
-          }
+          messages: [
+            import.meta.env.MODE === 'development'
+              ? e.message
+              : 'Unknown error',
+          ],
+        }
         : {
-            messages: ['Unknown error'],
-          };
+          messages: ['Unknown error'],
+        };
 
     return {
       data: {},

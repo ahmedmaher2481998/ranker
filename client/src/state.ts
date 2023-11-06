@@ -5,6 +5,7 @@ export enum AppPage {
     join = 'join',
     create = 'create',
     welcome = 'welcome',
+    waitingRoom = 'waitingRoom',
     startOver = 'startOver',
 }
 export type AppState = {
