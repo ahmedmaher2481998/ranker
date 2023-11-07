@@ -20,6 +20,7 @@ const Pages = () => {
   const currentState = useSnapshot(state);
 
   useEffect(() => {
+    // to redirect the user to the waiting room if the poll didn't start and we could connect correctly and we could assign find the token in the storage
     if (
       (currentState.me?.id && !currentState.poll?.hasStarted, currentState.poll)
     ) {
