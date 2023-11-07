@@ -26,12 +26,22 @@ const createSocketWithHandlers = ({
         },
         transports: ['websocket', 'polling'],
     });
-
+    // listening to Connections
     socket.on('connect', () => {
         console.log(
             `Connected With socketID ${socket.id} ,userID :${state.me?.id} , joined roomID : ${state.poll?.id} `
         );
+        actions.stopLoading()
     });
+
+
+    socket.on('connect_error', () => {
+        console.log(`Failed to connect socket`);
+
+
+        actions.stopLoading();
+    })
+    // Listing to server Events 
     socket.on(v.pollUpdated, (poll) => {
         console.log('event: "poll_updated" received', poll);
         actions.updatePoll(poll);
