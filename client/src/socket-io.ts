@@ -1,7 +1,12 @@
 import { AppActions, AppState } from './state';
 import { Socket, io } from 'socket.io-client';
 import { socketEvents as v } from "shared";
-const socketIoUrl = `http://${import.meta.env.VITE_API_HOSt}:${import.meta.env.VITE_API_PORT
+// const socketIoUrl = `http://${import.meta.env.VITE_API_HOSt}:${import.meta.env.VITE_API_PORT
+//     }/${import.meta.env.VITE_POLLS_NAMESPACE}`;
+
+
+
+export const socketIoUrl = `http://${import.meta.env.VITE_API_HOST}:${import.meta.env.VITE_API_PORT
     }/${import.meta.env.VITE_POLLS_NAMESPACE}`;
 
 type CreateSocketOptions = {
@@ -33,4 +38,4 @@ const createSocketWithHandlers = ({
     })
     return socket
 };
-export { socketIoUrl, createSocketWithHandlers };
+export { createSocketWithHandlers };

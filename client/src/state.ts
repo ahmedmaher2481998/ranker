@@ -50,7 +50,8 @@ const actions = {
         if (!state.socket) {
             state.socket = ref(
                 createSocketWithHandlers({
-                    state, actions, socketIoUrl
+                    socketIoUrl,
+                    state, actions
                 })
             )
         } else {
