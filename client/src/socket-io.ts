@@ -37,9 +37,17 @@ const createSocketWithHandlers = ({
 
     socket.on('connect_error', () => {
         console.log(`Failed to connect socket`);
-
+        actions.addWsError({
+            message: "Failed to Connect to Socket "
+            , type: "connection Error !"
+        })
 
         actions.stopLoading();
+    })
+
+    socket.on('exception', (exception) => {
+        console.log(`Ws Exception `, exception);
+        actions.addWsError(exception)
     })
     // Listing to server Events 
     socket.on(v.pollUpdated, (poll) => {

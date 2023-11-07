@@ -20,7 +20,9 @@ const Pages = () => {
   const currentState = useSnapshot(state);
 
   useEffect(() => {
-    if (currentState.me?.id && !currentState.poll?.hasStarted) {
+    if (
+      (currentState.me?.id && !currentState.poll?.hasStarted, currentState.poll)
+    ) {
       actions.setPage(AppPage.waitingRoom);
     }
   }, [currentState.me?.id, currentState.poll?.hasStarted]);
