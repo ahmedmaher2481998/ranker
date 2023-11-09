@@ -46,32 +46,33 @@ const state = proxy<AppState>({
     get canStartVote() {
         const votesPerParticipant = this.poll?.votesPerVoter ?? 100
         return this.nominationCount >= votesPerParticipant
+    },
     get nominationCount() {
-            return Object.keys(this.poll?.nominations || {}).length
-        },
+        return Object.keys(this.poll?.nominations || {}).length
+    },
     get participantCount() {
-            return Object.keys(this.poll?.participants || {}).length
-        },
+        return Object.keys(this.poll?.participants || {}).length
+    },
     get isAdmin() {
-            const me = this?.me;
-            const adminId = this.poll?.adminId;
-            if (!me) return false;
-            else {
-                return me.id === adminId;
-            }
-        },
+        const me = this?.me;
+        const adminId = this.poll?.adminId;
+        if (!me) return false;
+        else {
+            return me.id === adminId;
+        }
+    },
     get me() {
-            const accessToken = this.accessToken;
-            if (!accessToken) return;
+        const accessToken = this.accessToken;
+        if (!accessToken) return;
 
-            const { sub: id, name } = getTokenPayload(accessToken);
+        const { sub: id, name } = getTokenPayload(accessToken);
 
-            return {
-                name,
-                id,
-            };
-        },
-    });
+        return {
+            name,
+            id,
+        };
+    },
+});
 
 const actions = {
     setPage: (page: AppPage) => {
