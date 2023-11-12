@@ -8,9 +8,11 @@ import { useSnapshot } from 'valtio';
 import { getTokenPayload } from './util';
 import SnackBar from './components/ui/SnackBar';
 
-devtools(state, 'app state');
+devtools(state, { name: 'app state' });
 
 const App: React.FC = () => {
+  const currentState = useSnapshot(state);
+
   useEffect(() => {
     console.log(`Start Connecting from App UseEffect  - using access token `);
     actions.startLoading();
@@ -33,8 +35,17 @@ const App: React.FC = () => {
     actions.setPollAccessToken(accessToken);
     actions.initializeSocket();
   }, []);
-
-  const currentState = useSnapshot(state);
+  useEffect(() => {
+    console.log('App useEffect - check current participant');
+    const myId = currentState.me?.id;
+    if (
+      myId &&
+      currentState.socket?.connect &&
+      !currentState.poll?.participants[myId]
+    ) {
+      actions.startOver();
+    }
+  }, [currentState.poll?.participants]);
   return (
     <>
       {currentState.wsError.map((err) => (

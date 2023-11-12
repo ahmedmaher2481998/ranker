@@ -11,6 +11,7 @@ enum AppPage {
     create = 'create',
     welcome = 'welcome',
     waitingRoom = 'waitingRoom',
+    voting = 'voting'
 }
 type WsError = {
     type: string;
@@ -146,7 +147,11 @@ const actions = {
     },
     startVote: () => {
         state.socket?.emit(v.startPoll);
-    },
+    }, submitRankings: (rankings: string[]) => {
+        state.socket?.emit(v.submitRankings, { rankings })
+    }, cancelPoll: () => {
+        state.socket?.emit(v.cancelPoll)
+    }
 };
 // There were some errors with Derive Function from valtio
 // const computedWithState = derive(

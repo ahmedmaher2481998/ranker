@@ -7,22 +7,26 @@ import Join from './pages/Join';
 import { CSSTransition } from 'react-transition-group';
 import Loader from './components/ui/Loader';
 import WaitingRoom from './pages/WaitingRoom';
+import Voting from './pages/Voting';
 
 const routeConfig = {
   [AppPage.welcome]: Welcome,
   [AppPage.create]: Create,
   [AppPage.join]: Join,
   [AppPage.waitingRoom]: WaitingRoom,
+  [AppPage.voting]: Voting,
 };
 const Pages = () => {
   const currentState = useSnapshot(state);
 
   useEffect(() => {
     // to redirect the user to the waiting room if the poll didn't start and we could connect correctly and we could assign find the token in the storage
-    if (
-      (currentState.me?.id && !currentState.poll?.hasStarted, currentState.poll)
-    ) {
+    if (currentState.me?.id && !currentState.poll?.hasStarted) {
       actions.setPage(AppPage.waitingRoom);
+    }
+
+    if (currentState.me?.id && currentState.poll?.hasStarted) {
+      actions.setPage(AppPage.voting);
     }
   }, [currentState.me?.id, currentState.poll?.hasStarted]);
 
