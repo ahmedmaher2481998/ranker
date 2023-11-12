@@ -19,7 +19,9 @@ const ResultCard: React.FC<ResultCard> = ({ results }) => {
             className="grid grid-cols-3 gap-4 my-1 items-center"
           >
             <div className="col-span-2">{result.nominationText}</div>
-            <div className="col-span-1 text-right">{result.score}</div>
+            <div className="col-span-1 text-right">
+              {result.score.toFixed(2)}
+            </div>
           </div>
         ))}
       </div>
