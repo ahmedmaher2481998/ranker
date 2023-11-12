@@ -1,4 +1,4 @@
-import { Poll } from 'shared/poll-types';
+import { Poll, Rankings } from 'shared/poll-types';
 import { proxy, ref } from 'valtio';
 import { subscribeKey } from 'valtio/utils';
 import { Socket } from 'socket.io-client';
@@ -11,7 +11,8 @@ enum AppPage {
     create = 'create',
     welcome = 'welcome',
     waitingRoom = 'waitingRoom',
-    voting = 'voting'
+    voting = 'voting',
+    results = "results"
 }
 type WsError = {
     type: string;
@@ -36,6 +37,8 @@ type AppState = {
     nominationCount: number;
     participantCount: number;
     canStartVote: boolean;
+    hasVoted: boolean,
+    rankingsCount: number;
 };
 
 const state = proxy<AppState>({
@@ -71,7 +74,14 @@ const state = proxy<AppState>({
             name,
             id,
         };
-    },
+    }, get hasVoted() {
+        const rankings = this.poll?.rankings ?? {}
+        const userId = this.me?.id
+        return Object.keys(rankings).includes(userId ?? '')
+
+    }, get rankingsCount() {
+        return Object.keys(this.poll?.rankings ?? {}).length
+    }
 });
 
 const actions = {
@@ -151,6 +161,8 @@ const actions = {
         state.socket?.emit(v.submitRankings, { rankings })
     }, cancelPoll: () => {
         state.socket?.emit(v.cancelPoll)
+    }, endPoll: () => {
+        state.socket?.emit(v.closePoll)
     }
 };
 // There were some errors with Derive Function from valtio
