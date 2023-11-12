@@ -20,14 +20,25 @@ export const redisModule = RedisModule.registerAsync({
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
     const logger = new Logger("redis");
+
+    const connectionOptions: {
+      host: string;
+      password?: string;
+      port: number;
+    } = { host: null, port: null };
+
+    if (Boolean(process.env.prod)) {
+      connectionOptions.host = configService.get("REDIS_HOST_PROD");
+      connectionOptions.password = configService.get("REDIS_PASS_PROD");
+      connectionOptions.port = +configService.get("REDIS_PORT_PROD");
+    } else {
+      connectionOptions.host = configService.get("REDIS_HOST");
+      connectionOptions.port = +configService.get("REDIS_PORT");
+    }
+
+    logger.verbose(`prod ENV-Var  Set to: ${Boolean(process.env.prod)} ${Boolean(process.env.prod) ? "Will use Remote DB" : "will use localhost"}`);
     return {
-      connectionOptions: {
-        host: configService.get("REDIS_HOST_PROD"),
-        password: configService.get("REDIS_PASS_PROD"),
-        port: configService.get("REDIS_PORT_PROD"),
-        // host: configService.get('REDIS_HOST'),
-        // port: configService.get('REDIS_PORT'),
-      },
+      connectionOptions,
       onClientReady(redis) {
         logger.log("Redis is ready...");
         redis.on("error", (err) => {

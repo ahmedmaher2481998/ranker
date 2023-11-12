@@ -5,7 +5,6 @@ import { AppPage, actions, state } from './state';
 import Create from './pages/Create';
 import Join from './pages/Join';
 import { CSSTransition } from 'react-transition-group';
-import StartOver from './pages/StartOver';
 import Loader from './components/ui/Loader';
 import WaitingRoom from './pages/WaitingRoom';
 
@@ -13,7 +12,6 @@ const routeConfig = {
   [AppPage.welcome]: Welcome,
   [AppPage.create]: Create,
   [AppPage.join]: Join,
-  [AppPage.startOver]: StartOver,
   [AppPage.waitingRoom]: WaitingRoom,
 };
 const Pages = () => {

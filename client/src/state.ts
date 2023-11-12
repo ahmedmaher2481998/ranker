@@ -11,7 +11,6 @@ enum AppPage {
     create = 'create',
     welcome = 'welcome',
     waitingRoom = 'waitingRoom',
-    startOver = 'startOver',
 }
 type WsError = {
     type: string;
@@ -36,7 +35,6 @@ type AppState = {
     nominationCount: number;
     participantCount: number;
     canStartVote: boolean;
-
 };
 
 const state = proxy<AppState>({
@@ -44,14 +42,14 @@ const state = proxy<AppState>({
     loading: false,
     wsError: [],
     get canStartVote() {
-        const votesPerParticipant = this.poll?.votesPerVoter ?? 100
-        return this.nominationCount >= votesPerParticipant
+        const votesPerParticipant = this.poll?.votesPerVoter ?? 100;
+        return this.nominationCount >= votesPerParticipant;
     },
     get nominationCount() {
-        return Object.keys(this.poll?.nominations || {}).length
+        return Object.keys(this.poll?.nominations || {}).length;
     },
     get participantCount() {
-        return Object.keys(this.poll?.participants || {}).length
+        return Object.keys(this.poll?.participants || {}).length;
     },
     get isAdmin() {
         const me = this?.me;
@@ -81,7 +79,7 @@ const actions = {
     startOver: () => {
         localStorage.removeItem('accessToken');
         actions.reset();
-        actions.setPage(AppPage.startOver);
+        actions.setPage(AppPage.welcome);
     },
     startLoading: () => {
         state.loading = true;
@@ -104,9 +102,12 @@ const actions = {
                     actions,
                 })
             );
-        } else {
+            return;
+        } else if (!state.socket.connected) {
             state.socket.connect();
+            return;
         }
+        actions.stopLoading();
     },
     // we Exceptions Actions
     addWsError: (err: WsError) => {
@@ -141,10 +142,10 @@ const actions = {
     },
     removeParticipant: (id: string) => {
         state.socket?.emit(v.removeParticipant, { id });
-    }, startVote: () => {
-
-        state.socket?.emit(v.startPoll)
-    }
+    },
+    startVote: () => {
+        state.socket?.emit(v.startPoll);
+    },
 };
 // There were some errors with Derive Function from valtio
 // const computedWithState = derive(

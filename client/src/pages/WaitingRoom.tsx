@@ -1,12 +1,14 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { actions, state } from '../state';
 import { useSnapshot } from 'valtio';
-import { useCopyToClipboard } from 'react-use';
+import { useCopyToClipboard, useStateWithHistory } from 'react-use';
 import { colorizeText } from '../util';
 import { MdContentCopy, MdOutlinePeopleOutline } from 'react-icons/md';
 import { BsPencilSquare } from 'react-icons/bs';
 import ConfirmationDialog from '../components/ui/ConfirmationDialog';
 import ParticipantList from '../components/ParticipantList';
+import NominationForm from '../components/NominationForm';
+/*
 type ReducerState = {
   isParticipantListOpen: boolean;
   isNominationFormOpen: boolean;
@@ -32,56 +34,78 @@ enum ActionType {
   closeConfirmation = 'close_confirmation',
   closeParticipantList = 'close_participant_list',
 }
+*/
+// const reducer = (
+//   state: ReducerState,
+//   { body, type }: { type: ActionType; body?: any }
+// ) => {
+//   switch (type) {
+//     case ActionType.confirmRemoveParticipant:
+//       // expecting  body.id
+//       state.confirmationMessage = `Remove ${
+//         currentState.poll?.participants[body.id]
+//       } from poll?`;
+//       state.participantToRemove = body.id;
+//       state.isConfirmationOpen = true;
+//       return { ...state };
 
+//     case ActionType.submitRemoveParticipant:
+//       if (state.participantToRemove) {
+//         actions.removeParticipant(state.participantToRemove);
+//         state.isConfirmationOpen = false;
+//         state.confirmationMessage = '';
+//       }
+//       return { ...state };
+
+//     case ActionType.openNominationForm:
+//       state.isNominationFormOpen = true;
+//       return { ...state };
+
+//     case ActionType.openParticipantList:
+//       state.isParticipantListOpen = true;
+//       return { ...state };
+
+//     case ActionType.openConfirmation:
+//       state.isConfirmationOpen = true;
+//       return { ...state };
+
+//     case ActionType.closeConfirmation:
+//       state.isConfirmationOpen = false;
+//       return { ...state };
+
+//     case ActionType.closeParticipantList:
+//       state.isParticipantListOpen = false;
+//       return { ...state };
+//   }
+
+//   return state;
+// };
 const WaitingRoom: React.FC = () => {
-  const currentState = useSnapshot(state);
-  const reducer = (
-    state: ReducerState,
-    { body, type }: { type: ActionType; body?: any }
-  ) => {
-    switch (type) {
-      case ActionType.confirmRemoveParticipant:
-        // expecting  body.id
-        state.confirmationMessage = `Remove ${
-          currentState.poll?.participants[body.id]
-        } from poll?`;
-        state.participantToRemove = body.id;
-        state.isConfirmationOpen = true;
-        return { ...state };
-
-      case ActionType.submitRemoveParticipant:
-        if (state.participantToRemove) {
-          actions.removeParticipant(state.participantToRemove);
-          state.isConfirmationOpen = false;
-          state.confirmationMessage = '';
-        }
-        return { ...state };
-
-      case ActionType.openNominationForm:
-        state.isNominationFormOpen = true;
-        return { ...state };
-
-      case ActionType.openParticipantList:
-        state.isParticipantListOpen = true;
-        return { ...state };
-
-      case ActionType.openConfirmation:
-        state.isConfirmationOpen = true;
-        return { ...state };
-
-      case ActionType.closeConfirmation:
-        state.isConfirmationOpen = false;
-        return { ...state };
-
-      case ActionType.closeParticipantList:
-        state.isParticipantListOpen = false;
-        return { ...state };
-    }
-
-    return state;
-  };
+  // const [reducerState, dispatch] = useReducer(reducer, reducerInitialState);
   const [_copiedText, copyToClipboard] = useCopyToClipboard();
-  const [reducerState, dispatch] = useReducer(reducer, reducerInitialState);
+  // will use useState instead of useReducer , way more simple
+  const [isParticipantListOpen, setIsParticipantListOpen] =
+    useState<boolean>(false);
+  const [isNominationFormOpen, setIsNominationFormOpen] =
+    useState<boolean>(false);
+  const [isConformationOpen, setIsConformationOpen] = useState<boolean>(false);
+  const [confirmationMessage, setConfirmationMessage] = useState<string>('');
+  const [participantToRemove, setParticipantToRemove] = useState<string>();
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const currentState = useSnapshot(state);
+  const confirmRemoveParticipant = (id: string) => {
+    setConfirmationMessage(
+      `Remove ${currentState.poll?.participants[id]} from poll?`
+    );
+    setParticipantToRemove(id);
+    setIsConformationOpen(true);
+  };
+
+  const submitRemoveParticipant = () => {
+    if (participantToRemove) actions.removeParticipant(participantToRemove);
+    setIsConformationOpen(false);
+  };
+
   useEffect(() => {
     console.log(`Connecting to socket `);
     actions.initializeSocket();
@@ -110,9 +134,7 @@ const WaitingRoom: React.FC = () => {
         <div className="flex justify-center">
           <button
             className="box btn-orange mx-2 pulsate"
-            onClick={() =>
-              dispatch({ type: ActionType.openParticipantList, body: {} })
-            }
+            onClick={() => setIsParticipantListOpen(true)}
           >
             <MdOutlinePeopleOutline size={24} />
             <span>{currentState.participantCount}</span>
@@ -120,9 +142,7 @@ const WaitingRoom: React.FC = () => {
 
           <button
             className="box btn-purple mx-2 pulsate"
-            onClick={() =>
-              dispatch({ type: ActionType.openNominationForm, body: {} })
-            }
+            onClick={() => setIsNominationFormOpen(true)}
           >
             <BsPencilSquare size={24} />
             <span>{currentState.nominationCount}</span>
@@ -156,39 +176,43 @@ const WaitingRoom: React.FC = () => {
 
           <button
             className="box btn-purple my-2"
-            onClick={() => {
-              console.log('Leaving poll..');
-              dispatch({
-                type: ActionType.openConfirmation,
-              });
-            }}
+            onClick={() => setShowConfirmation(true)}
           >
             Leave Poll
           </button>
+          {/* Confirming  leaving the poll */}
           <ConfirmationDialog
             message="You'll be kicked out of the poll"
-            showDialog={reducerState.isConfirmationOpen}
-            onCancel={() =>
-              dispatch({
-                type: ActionType.closeConfirmation,
-              })
-            }
+            showDialog={showConfirmation}
+            onCancel={() => setShowConfirmation(false)}
             onConfirm={() => actions.startOver()}
+          />
+          {/* Confirming removing another player */}
+          <ConfirmationDialog
+            showDialog={isConformationOpen}
+            message={confirmationMessage}
+            onCancel={() => setIsConformationOpen(false)}
+            onConfirm={submitRemoveParticipant}
           />
         </div>
       </div>
       <ParticipantList
         isAdmin={currentState.isAdmin || false}
-        isOpen={reducerState.isParticipantListOpen}
-        onRemoveParticipant={(id) =>
-          dispatch({
-            type: ActionType.confirmRemoveParticipant,
-            body: { id },
-          })
-        }
-        onClose={() => dispatch({ type: ActionType.closeParticipantList })}
+        isOpen={isParticipantListOpen}
+        onRemoveParticipant={confirmRemoveParticipant}
+        onClose={() => setIsParticipantListOpen(false)}
         participants={currentState.poll?.participants}
         userID={currentState.me?.id}
+      />
+      <NominationForm
+        isAdmin={currentState.isAdmin || false}
+        isOpen={isNominationFormOpen}
+        onRemoveNomination={(id) => actions.removeNomination(id)}
+        onSubmitNomination={(text) => actions.nominate(text)}
+        nominations={currentState.poll?.nominations}
+        userID={currentState.me?.id}
+        onClose={() => setIsNominationFormOpen(false)}
+        title={currentState.poll?.topic}
       />
     </>
   );
