@@ -156,7 +156,7 @@ const WaitingRoom: React.FC = () => {
               </div>
               <button
                 className="box btn-orange my-2"
-                disabled={currentState.canStartVote}
+                disabled={!currentState.canStartVote}
                 onClick={() => console.log('Start Vote ? ')}
               >
                 Start Voting
@@ -165,11 +165,11 @@ const WaitingRoom: React.FC = () => {
           ) : (
             <>
               <div className="italic my-2 ">
-                Waiting for Admin ,{' '}
+                Waiting for{' '}
                 <span className="font-semibold">
                   {currentState.poll?.participants[currentState.poll.adminId]}
                 </span>
-                , to start the voting.
+                ,to start the voting.
               </div>
             </>
           )}

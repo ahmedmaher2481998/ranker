@@ -43,6 +43,7 @@ const state = proxy<AppState>({
     wsError: [],
     get canStartVote() {
         const votesPerParticipant = this.poll?.votesPerVoter ?? 100;
+        console.log('can Start Vote ?', this.nominationCount >= votesPerParticipant);
         return this.nominationCount >= votesPerParticipant;
     },
     get nominationCount() {
