@@ -7,14 +7,14 @@ import Loader from './components/ui/Loader';
 import { useSnapshot } from 'valtio';
 import { getTokenPayload } from './util';
 import SnackBar from './components/ui/SnackBar';
-
+import { log } from 'console';
 devtools(state, { name: 'app state' });
 
 const App: React.FC = () => {
   const currentState = useSnapshot(state);
-
+  // whn user refreshes we use the token to regain it's state
   useEffect(() => {
-    console.log(`Start Connecting from App UseEffect  - using access token `);
+    log(`Start Connecting from App UseEffect  - using access token `);
     actions.startLoading();
 
     const accessToken = localStorage.getItem('accessToken');
@@ -35,12 +35,13 @@ const App: React.FC = () => {
     actions.setPollAccessToken(accessToken);
     actions.initializeSocket();
   }, []);
+  // when user is kicked from the poll this effect will reset it's sate
   useEffect(() => {
-    console.log('App useEffect - check current participant');
+    log('App useEffect - check current participant');
     const myId = currentState.me?.id;
     if (
       myId &&
-      currentState.socket?.connect &&
+      currentState.socket?.connected &&
       !currentState.poll?.participants[myId]
     ) {
       actions.startOver();
