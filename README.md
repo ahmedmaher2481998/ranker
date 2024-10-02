@@ -1,19 +1,57 @@
-## Ranker
+# NEST REACT RANKER APP 🔢
 
-> a real time voting app using in memory DB (redis)
+This is the Web app where we can vote upon the topics in real time with your Friends.
 
-#### run it locally
+## Tech stacks
 
-requirements
-. docker
-. node js
-. populate .env.example with the needed data
+- Nestjs
+- Vite (react)
+- Socketio
+- Redis
+- Docker
+- Tailwind
+- Valtio
 
-clone the repo into your local machine then run
+## Run Locally
+
+### Available scripts
 
 ```bash
 npm install
-npm start
 ```
 
-we make use of the npm workspaces to run all three environment's at once
+### Running both client and server
+
+```bash
+npm run start
+```
+
+### Server
+
+open [http://localhost:3000/](http://localhost:3000/) to view server running in the postman.
+
+### Client
+
+open [http://localhost:8080/](http://localhost:8080/) to view client running in the browser.
+
+## Screens
+
+### Welcome Screen
+
+![Welcome](/demo/welcome.png)
+
+### Forms Screen
+
+![Forms](/demo/forms.png)
+
+### Lobby Screen
+
+![Forms](/demo/lobby.png)
+
+### Nomination Screen
+
+![Forms](/demo/nomination.png)
+
+### Voting Screen
+
+![Voting](/demo/voting.png)
